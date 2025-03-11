@@ -1,14 +1,23 @@
+import 'package:app_deepseek/providers/theme_provider.dart';
 import 'package:app_deepseek/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(
+      ChangeNotifierProvider(
+        create: (_) => ThemeProvider(),
+        child: const MyApp(),
+      ),
+    );
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
       title: 'DeepSeek API',
       theme: ThemeData(
@@ -20,14 +29,14 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.dosisTextTheme(),
       ),
       darkTheme: ThemeData(
-        useMaterial3: true, 
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue, 
+          seedColor: Colors.blue,
           brightness: Brightness.dark,
         ),
         textTheme: GoogleFonts.dosisTextTheme(),
       ),
-      themeMode: ThemeMode.light,
+      themeMode: themeProvider.themeMode,
       debugShowCheckedModeBanner: false,
       home: const HomeScreen(),
     );
