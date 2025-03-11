@@ -17,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<Message> _messages = [];
   final ScrollController _scrollController = ScrollController();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -26,40 +27,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchData() async {
     try {
-      final data = await _apiService.fetchData();
+      final data = await _apiService.checkServerConnection();
       setState(() {
-        // _data = data;
-        _messages.add(Message(
-            text: 'Data: $data',
-            isUserMessage: false)); // Ejemplo de mensaje del sistema
+        _messages.add(
+          Message(
+            text: '--> Conexión exitosa: $data',
+            isUserMessage: false,
+          ),
+        ); // Ejemplo de mensaje del sistema
       });
       _scrollToBottom();
     } catch (e) {
       print('--> Error: $e');
+      setState(() {
+        _messages.add(
+          Message(
+            text: 'Error al conectar con el servidor: $e',
+            isUserMessage: false,
+          ),
+        );
+      });
+      _scrollToBottom();
     }
   }
 
   // Función para enviar el mensaje
-  void _sendMessage() {
+  void _sendMessage() async {
     final message = _messageController.text;
     if (message.isNotEmpty) {
       setState(() {
         _messages.add(
-          Message(text: message, isUserMessage: true),
-        ); // Agregar mensaje del usuario
+          Message(
+            text: message,
+            isUserMessage: true,
+          ),
+        );
+        _isLoading = true;
       });
       _messageController.clear();
       _scrollToBottom();
 
-      // Simular una respuesta del sistema (puedes reemplazar esto con una llamada a la API)
-      Future.delayed(const Duration(seconds: 1), () {
+      try {
+        final response = await _apiService.sendQuestion(message);
         setState(() {
           _messages.add(
-            Message(text: 'Respuesta a: $message', isUserMessage: false),
-          ); // Agregar mensaje del sistema
+            Message(
+              text: response['respuesta'],
+              isUserMessage: false,
+              model: response['model'],
+              tokensUsed: response['tokens_utilizados'],
+            ),
+          );
+          _isLoading = false;
         });
         _scrollToBottom();
-      });
+      } catch (e) {
+        print('--> Error: $e');
+        setState(() {
+          _messages.add(
+            Message(
+                text: 'Error al obtener la respuesta: $e',
+                isUserMessage: false),
+          );
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -114,9 +147,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           // Input de chat
-          ChatInput(
-            controller: _messageController,
-            onSend: _sendMessage, // Usar el widget ChatInput
+          Column(
+            children: [
+              if (_isLoading) // Mostrar el indicador de carga
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ChatInput(
+                controller: _messageController,
+                onSend: _sendMessage, // Usar el widget ChatInput
+              ),
+            ],
           ),
         ],
       ),
