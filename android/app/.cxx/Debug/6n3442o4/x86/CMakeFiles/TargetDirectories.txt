@@ -1,0 +1,2 @@
+C:/Users/usuario/Desktop/Topicos/flutterDeepSeek/app_deepseek/android/app/.cxx/Debug/6n3442o4/x86/CMakeFiles/edit_cache.dir
+C:/Users/usuario/Desktop/Topicos/flutterDeepSeek/app_deepseek/android/app/.cxx/Debug/6n3442o4/x86/CMakeFiles/rebuild_cache.dir
