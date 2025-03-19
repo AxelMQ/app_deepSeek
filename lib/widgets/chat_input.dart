@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
   final Function(String) onSend;
+  final VoidCallback onMicPressed; // Función para manejar el micrófono
+  final bool isListening; // Estado de grabación
 
   const ChatInput({
     super.key,
     required this.controller,
     required this.onSend,
+    required this.onMicPressed,
+    required this.isListening,
   });
 
   @override
@@ -42,10 +46,20 @@ class ChatInput extends StatelessWidget {
             onPressed: () {
               final message = controller.text;
               if (message.isNotEmpty) {
-                onSend(message); 
+                onSend(message);
                 controller.clear();
               }
             },
+          ), 
+          const SizedBox(width: 8.0),
+          // Botón de micrófono
+          IconButton(
+            icon: Icon(
+              isListening
+                  ? Icons.mic_off
+                  : Icons.mic, // Cambia el ícono según el estado
+            ),
+            onPressed: onMicPressed,
           ),
         ],
       ),

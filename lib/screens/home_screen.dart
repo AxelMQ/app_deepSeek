@@ -1,6 +1,7 @@
 import 'package:app_deepseek/screens/config_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt; 
 import 'package:app_deepseek/controllers/chat_controller.dart'; // Importa el ChatController
 import 'package:app_deepseek/widgets/chat_input.dart';
 import 'package:app_deepseek/widgets/message_bubble.dart';
@@ -15,6 +16,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final stt.SpeechToText _speech = stt.SpeechToText(); // Instancia de SpeechToText
+  bool _isListening = false; // Estado de grabación
 
   @override
   void initState() {
@@ -32,6 +35,26 @@ class _HomeScreenState extends State<HomeScreen> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
+  }
+
+   // Iniciar o detener la grabación de voz
+  Future<void> _toggleListening() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize();
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (result) {
+            setState(() {
+              _messageController.text = result.recognizedWords; // Actualiza el campo de texto
+            });
+          },
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
   }
 
   @override
@@ -83,6 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   chatController.sendMessage(message);
                   _scrollToBottom();
                 },
+                onMicPressed: _toggleListening, // Pasar la función de grabación
+                isListening: _isListening, // Pasar el estado de grabación
               ),
             ],
           ),

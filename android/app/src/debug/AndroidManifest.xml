@@ -4,4 +4,7 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    
+    <!-- Permiso para usar el micrófono -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 </manifest>
