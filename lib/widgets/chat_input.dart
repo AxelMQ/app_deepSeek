@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
-  final VoidCallback onSend;
+  final Function(String) onSend;
 
   const ChatInput({
     super.key,
@@ -39,7 +39,13 @@ class ChatInput extends StatelessWidget {
           // Botón de enviar
           IconButton(
             icon: const Icon(Icons.send),
-            onPressed: onSend,
+            onPressed: () {
+              final message = controller.text;
+              if (message.isNotEmpty) {
+                onSend(message); 
+                controller.clear();
+              }
+            },
           ),
         ],
       ),

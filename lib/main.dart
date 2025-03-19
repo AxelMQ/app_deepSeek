@@ -1,3 +1,4 @@
+import 'package:app_deepseek/controllers/chat_controller.dart';
 import 'package:app_deepseek/providers/theme_provider.dart';
 import 'package:app_deepseek/screens/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -5,12 +6,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 void main() => runApp(
-      ChangeNotifierProvider(
-        create: (_) => ThemeProvider(),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => ChatController()),
+        ],
         child: const MyApp(),
       ),
     );
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
