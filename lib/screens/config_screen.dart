@@ -15,18 +15,24 @@ class ConfigScreen extends StatefulWidget {
 
 class _ConfigScreenState extends State<ConfigScreen> {
   final _urlController = TextEditingController();
+  final _apiKeyController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadSaveUrl();
+    _loadSavedData();
   }
 
-  // Cargar la URL guardad
-  Future<void> _loadSaveUrl() async {
+  // Cargar la URL y la API Key guardadas
+  Future<void> _loadSavedData() async {
     final savedUrl = await ApiConfigService.getApiUrl();
+    final savedApiKey = await ApiConfigService.getApiKey();
+
     if (savedUrl != null) {
       _urlController.text = savedUrl;
+    }
+    if (savedApiKey != null) {
+      _apiKeyController.text = savedApiKey;
     }
   }
 
@@ -35,14 +41,34 @@ class _ConfigScreenState extends State<ConfigScreen> {
     final newUrl = _urlController.text;
     if (newUrl.isNotEmpty) {
       await ApiConfigService.saveApiUrl(newUrl);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_box),
-            Text('URL actualizada correctamente'),
-          ],
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_box),
+              Text('URL actualizada correctamente'),
+            ],
+          ),
         ),
-      ));
+      );
+    }
+  }
+
+  // Guardar la nueva API Key
+  Future<void> _saveApiKey() async {
+    final newApiKey = _apiKeyController.text;
+    if (newApiKey.isNotEmpty) {
+      await ApiConfigService.saveApiKey(newApiKey);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_box),
+              Text('API Key guardada correctamente'),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -67,6 +93,22 @@ class _ConfigScreenState extends State<ConfigScreen> {
             CustomButton(
               text: 'Guardar URL',
               onPressed: _savedUrl,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              textColor: Theme.of(context).colorScheme.onPrimary,
+              borderRadius: 12.0,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 60),
+            ),
+            const SizedBox(height: 20),
+            // Campo para la API Key
+            CustomTextField(
+              controller: _apiKeyController,
+              labelText: 'API Key',
+              hintText: 'Ingresa tu API Key de OpenRouter',
+            ),
+            const SizedBox(height: 20),
+            CustomButton(
+              text: 'Guardar API Key',
+              onPressed: _saveApiKey,
               backgroundColor: Theme.of(context).colorScheme.primary,
               textColor: Theme.of(context).colorScheme.onPrimary,
               borderRadius: 12.0,

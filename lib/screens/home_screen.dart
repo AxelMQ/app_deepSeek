@@ -22,19 +22,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _checkApiConnection();
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _checkApiConnection() async {
     try {
-      final data = await _apiService.checkServerConnection();
+      await _apiService.checkApiConnection();
       setState(() {
         _messages.add(
           Message(
-            text: '--> Conexión exitosa: $data',
+            text: 'Conexión exitosa con OpenRouter.',
             isUserMessage: false,
           ),
-        ); // Ejemplo de mensaje del sistema
+        );
       });
       _scrollToBottom();
     } catch (e) {
@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _messages.add(
           Message(
-            text: 'Error al conectar con el servidor: $e',
+            text: 'Error al conectar con OpenRouter: $e',
             isUserMessage: false,
           ),
         );

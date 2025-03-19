@@ -4,23 +4,41 @@ import 'package:dio/dio.dart';
 class ApiService {
   late Dio _dio;
 
-  ApiService() {
+   ApiService() {
     _dio = Dio();
-    // Interceptor para usar la URL guardada
-    _dio.interceptors
-        .add(InterceptorsWrapper(onRequest: (options, handler) async {
-      final baseUrl = await ApiConfigService.getApiUrl();
-      options.baseUrl = baseUrl ?? 'http://192.168.100.2:8000';
-      return handler.next(options);
-    }));
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final baseUrl = await ApiConfigService.getApiUrl();
+        final apiKey = await ApiConfigService.getApiKey();
+
+         if (baseUrl != null) {
+          options.baseUrl = baseUrl;
+        }
+        if (apiKey != null) {
+          options.headers['Authorization'] = 'Bearer $apiKey';
+        }
+        return handler.next(options);
+      },
+    ));
   }
 
-  Future<dynamic> checkServerConnection() async {
+  // Método para verificar la conexión con la API
+  Future<dynamic> checkApiConnection() async {
     try {
-      final response = await _dio.get('/health');
-      return response.data;
+      // Envía una solicitud simple para verificar la conexión
+      final response = await _dio.post(
+        '/chat/completions',
+        data: {
+          'model': 'deepseek/deepseek-r1:free',
+          'messages': [
+            {'role': 'system', 'content': 'You are a helpful assistant'},
+            {'role': 'user', 'content': 'Hola'},
+          ],
+        },
+      );
+      return response.data; // Devuelve la respuesta para verificar la conexión
     } catch (e) {
-      throw Exception('Failed to load data: $e');
+      throw Exception('Failed to connect to API: $e');
     }
   }
 
@@ -28,10 +46,20 @@ class ApiService {
   Future<dynamic> sendQuestion(String question) async {
     try {
       final response = await _dio.post(
-        '/preguntar',
-        data: {'text': question},
+        '/chat/completions',
+        data: {
+          'model': 'deepseek/deepseek-r1:free',
+          'messages': [
+            {'role': 'system', 'content': 'You are a helpful assistant'},
+            {'role': 'user', 'content': question},
+          ],
+        },
       );
-      return response.data;
+      return {
+        'respuesta': response.data['choices'][0]['message']['content'],
+        'model': response.data['model'],
+        'tokens_utilizados': response.data['usage']['total_tokens'],
+      };
     } catch (e) {
       throw Exception('Failed to send question: $e');
     }
