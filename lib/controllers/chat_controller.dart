@@ -1,18 +1,110 @@
+import 'dart:async';
+
 import 'package:app_deepseek/models/message_model.dart';
 import 'package:app_deepseek/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ChatController extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   final List<Message> _messages = [];
   bool _isLoading = false;
   final FlutterTts _flutterTts;
+  bool _isListening = false;
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  Function(String)? _onTextRecognized;
+  Timer? _silenceTimer;
 
   ChatController(this._flutterTts);
 
+  // Método para establecer el callback
+  void setOnTextRecognized(Function(String) callback) {
+    _onTextRecognized = callback;
+  }
+
   List<Message> get messages => _messages;
   bool get isLoading => _isLoading;
+  bool get isListening => _isListening;
+
+  // Método para iniciar/detener la grabación
+  Future<void> toggleListening() async {
+    if (!_isListening) {
+      try {
+        bool available = await _speech.initialize(
+          onStatus: (status) {
+            if (status == 'notListening') {
+              _isListening = false;
+              notifyListeners();
+            }
+          },
+          onError: (error) {
+            _isListening = false;
+            notifyListeners();
+            print('Error de reconocimiento de voz: $error');
+          },
+        );
+
+        if (available) {
+          _isListening = true;
+          notifyListeners();
+          _speech.listen(
+            onResult: (result) {
+              if (_onTextRecognized != null) {
+                _onTextRecognized!(result.recognizedWords);
+              }
+              _resetSilenceTimer();
+            },
+            onSoundLevelChange: (level) {
+              if (level < 50) {
+                _startSilenceTimer(); // Inicia el temporizador si hay silencio
+              } else {
+                _resetSilenceTimer(); // Reinicia el temporizador si se detecta sonido
+              }
+            },
+          );
+        } else {
+          throw Exception('El reconocimiento de voz no está disponible.');
+        }
+      } catch (e) {
+        _isListening = false;
+        notifyListeners();
+        print('Error al inicializar el reconocimiento de voz: $e');
+      }
+    } else {
+      _isListening = false;
+      notifyListeners();
+      _speech.stop();
+      _silenceTimer?.cancel();
+    }
+  }
+
+  // Inicia el temporizador de silencio
+  void _startSilenceTimer() {
+    _silenceTimer ??= Timer(const Duration(seconds: 3), () async {
+      if (_isListening) {
+        await stopListening();
+        if (_onTextRecognized != null) {
+          _onTextRecognized!('');
+        }
+      }
+    });
+  }
+
+  Future<void> stopListening() async {
+    if (_isListening) {
+      _isListening = false;
+      notifyListeners();
+      await _speech.stop();
+      _silenceTimer?.cancel();
+    }
+  }
+
+  // Reinicia el temporizador de silencio
+  void _resetSilenceTimer() {
+    _silenceTimer?.cancel(); // Cancela el temporizador actual
+    _silenceTimer = null; // Reinicia el temporizador
+  }
 
   Future<void> checkApiConnection() async {
     try {

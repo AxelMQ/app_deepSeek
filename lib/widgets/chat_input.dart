@@ -27,6 +27,8 @@ class ChatInput extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
+              maxLines: 5, // Permite hasta 5 líneas
+              minLines: 1, // Mínimo 1 línea
               decoration: InputDecoration(
                 hintText: 'Escribe un mensaje...',
                 border: OutlineInputBorder(
@@ -41,28 +43,50 @@ class ChatInput extends StatelessWidget {
           ),
           const SizedBox(width: 8.0),
           // Botón de enviar
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: () {
-              final message = controller.text;
-              if (message.isNotEmpty) {
-                onSend(message);
-                controller.clear();
-              }
-            },
-          ), 
-          const SizedBox(width: 8.0),
-          // Botón de micrófono
-          IconButton(
-            icon: Icon(
-              isListening
-                  ? Icons.mic_off
-                  : Icons.mic, // Cambia el ícono según el estado
-            ),
-            onPressed: onMicPressed,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: () {
+                  final message = controller.text;
+                  if (message.isNotEmpty) {
+                    onSend(message);
+                    controller.clear();
+                  }
+                },
+              ),
+              const SizedBox(width: 8.0),
+              // Botón de micrófono
+              Container(
+                decoration: isListening
+                    ? BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.redAccent.withOpacity(0.6),
+                            blurRadius: 12,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      )
+                    : null,
+                child: IconButton(
+                  icon: Icon(
+                    isListening ? Icons.mic_off : Icons.mic,
+                    color: isListening
+                        ? Colors.red
+                        : Theme.of(context).iconTheme.color,
+                  ),
+                  onPressed: onMicPressed,
+                ),
+              )
+            ],
           ),
         ],
       ),
     );
   }
+
+  
 }
